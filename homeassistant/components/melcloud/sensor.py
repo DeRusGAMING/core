@@ -51,7 +51,7 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="energy",
         name="Energy",
-        icon="mdi:factory",
+        icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         value_fn=lambda x: x.device.total_energy_consumed,
