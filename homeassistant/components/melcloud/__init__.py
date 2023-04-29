@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Dict, List
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Establish connection with MELClooud."""
+    """Establish connection with MELCloud."""
     conf = entry.data
     mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
@@ -94,7 +94,7 @@ class MelCloudDevice:
         self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Pull the latest data from MELCloud."""
         try:
             await self.device.update()
@@ -103,7 +103,7 @@ class MelCloudDevice:
             _LOGGER.warning("Connection failed for %s", self.name)
             self._available = False
 
-    async def async_set(self, properties: dict[str, Any]):
+    async def async_set(self, properties: Dict[str, Any]) -> None:
         """Write state changes to the MELCloud API."""
         try:
             await self.device.set(properties)
@@ -118,12 +118,12 @@ class MelCloudDevice:
         return self._available
 
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return device ID."""
         return self.device.device_id
 
     @property
-    def building_id(self):
+    def building_id(self) -> str:
         """Return building ID of the device."""
         return self.device.building_id
 
@@ -149,7 +149,7 @@ class MelCloudDevice:
 
 async def mel_devices_setup(
     hass: HomeAssistant, token: str
-) -> dict[str, list[MelCloudDevice]]:
+) -> Dict[str, List[MelCloudDevice]]:
     """Query connected devices from MELCloud."""
     session = async_get_clientsession(hass)
     try:
@@ -163,7 +163,7 @@ async def mel_devices_setup(
     except (asyncio.TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady() from ex
 
-    wrapped_devices: dict[str, list[MelCloudDevice]] = {}
+    wrapped_devices: Dict[str, List[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():
         wrapped_devices[device_type] = [MelCloudDevice(device) for device in devices]
     return wrapped_devices
